@@ -1,0 +1,10 @@
+/logs/
+/cms-backyard.ipr
+/cms-backyard.iws
+/cms-backyard.iml
+/target/
+/LOG_PATH_IS_UNDEFINED/
+.idea/
+stack.iml
+mvn*
+.mvn/

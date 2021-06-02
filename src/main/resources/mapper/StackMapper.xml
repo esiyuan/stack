@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.analyze.stack.mapper.StackMapper">
+
+
+    <select id="selectMaxAndMinId" resultType="com.analyze.stack.mapper.base.MaxAndMinId"
+            parameterType="com.analyze.stack.mapper.base.MaxAndMinId">
+        SELECT
+        max(id) as maxId, min(id ) as minId
+        FROM m_stack
+        where 1 = 1
+        <if test="minId != null ">AND `id` &gt;= #{minId,jdbcType=BIGINT}</if>
+        <if test="maxId != null ">AND `id` &lt;= #{maxId,jdbcType=BIGINT}</if>
+    </select>
+    <sql id="Base_Column_List">
+        id, `name`, `code`
+    </sql>
+    <select id="selectBetween" resultType="com.analyze.stack.pojo.model.StackDO"
+            parameterType="com.analyze.stack.mapper.base.IdTimeRangeQueryBO">
+        SELECT
+        <include refid="Base_Column_List"/>
+        from
+        m_stack
+        where id >= #{startId} AND id &lt;= #{endId}
+        order by id asc
+
+    </select>
+</mapper>

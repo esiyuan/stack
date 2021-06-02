@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date{yyyy-MM-dd HH:mm:ss} [%level] [%thread] [%logger{36}:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <springProfile name="prod,dev">
+        <appender name="ACCESS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <File>${LOG_PATH}/access.log</File>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <FileNamePattern>/${LOG_PATH}/access/access%d{yyyy-MM-dd_HH}.log</FileNamePattern>
+                <!--168小时-->
+                <maxHistory>168</maxHistory>
+            </rollingPolicy>
+            <encoder>
+                <Pattern>[%d{yyyy-MM-dd HH:mm:ss}] [%level] [%X{sentryTraceId}] [%X{traceId}] [%thread] [%logger{35}] -
+                    %msg %n
+                </Pattern>
+            </encoder>
+        </appender>
+
+        <root level="info">
+            <appender-ref ref="STDOUT"/>
+            <appender-ref ref="ACCESS"/>
+        </root>
+    </springProfile>
+</configuration>

@@ -1,0 +1,21 @@
+server:
+ port: 8100
+
+spring:
+ datasource:
+   driver-class-name: com.mysql.jdbc.Driver
+#   url: jdbc:mysql://10.1.201.152:3306/mgboss_1208?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
+#   username: root
+#   password: Lv2KvHrdUS
+   url: jdbc:mysql://10.200.12.118:3306/cms_test01?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&rewriteBatchedStatements=true&useSSL=false&useAffectedRows=true
+   username: root
+   password: xt8WGcHDhyH2B23i
+
+mybatis-plus:
+ global-config:
+   db-config:
+     id-type: auto
+     capital-mode: false
+
+
+stackDetail: http://qt.gtimg.cn/q=s_
