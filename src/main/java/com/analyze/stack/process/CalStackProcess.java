@@ -6,7 +6,10 @@ import com.analyze.stack.pojo.model.StackDO;
 import com.analyze.stack.pojo.model.StackDetailDO;
 import com.analyze.stack.pojo.result.BooleanResult;
 import com.analyze.stack.service.StackDetailService;
+import com.analyze.stack.util.util.ExcelWriteUtil;
 import com.analyze.stack.util.util.HttpsClientUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
 import lombok.extern.slf4j.Slf4j;
@@ -17,8 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+import java.util.*;
 
 /**
  * @author guanjie@mgtv.com
@@ -35,28 +38,63 @@ public class CalStackProcess {
     private String detailUrl;
 
 
+    public void calcDay(String day) {
+        LambdaQueryWrapper<StackDetailDO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(StackDetailDO::getCurDate, day);
+        List<StackDetailDO> list = stackDetailService.list(queryWrapper);
+        list.sort(Comparator.comparing(StackDetailDO::getTotalPrice).reversed());
+
+        Map<Long, Integer> totalPriceMap = new HashMap<>();
+        for (int i = 0; i < list.size(); i++) {
+            totalPriceMap.put(list.get(i).getId(), i + 1);
+        }
+
+        list.sort(Comparator.comparing(StackDetailDO::getCurTotal).reversed());
+
+        Map<Long, Integer> currontMap = new HashMap<>();
+        for (int i = 0; i < list.size(); i++) {
+            currontMap.put(list.get(i).getId(), i + 1);
+        }
+        list.sort(Comparator.comparing(StackDetailDO::getRise).reversed());
+
+        List<List<Object>> lists = new ArrayList<>();
+        for (StackDetailDO stackDetailDO : list) {
+            lists.add(Lists.newArrayList(stackDetailDO.getName(), stackDetailDO.getCode(), stackDetailDO.getCurPrice(),
+                    stackDetailDO.getRise()/100.0, stackDetailDO.getCurTotal(), currontMap.get(stackDetailDO.getId()), stackDetailDO.getTotalPrice(), totalPriceMap.get(stackDetailDO.getId())));
+        }
+
+        ExcelWriteUtil.write(1, "当前行情", new File("d://当前行情.xlsx"),
+                Lists.newArrayList("股票名称", "股票代码", "当前价格", "涨幅", "成交量(万)", "成交量排名", "市值(亿)", "市值排名"), lists);
+
+    }
+
+
     public void calcStack() {
         String curData = DateTime.now().toString("yyyy-MM-dd");
         List<StackDO> stackDOS = MinToMaxDataCollector.collectData(stackCollector, 1000);
         List<StackDetailDO> stackDetailDOS = new ArrayList<>();
+        Set<String> codeSet = new HashSet<>();
         for (StackDO stackDO : stackDOS) {
-            BooleanResult<StackDetailRespDTO> stackDetail = getStackDetail(stackDO.getCode());
-            if (stackDetail.isSucceed()) {
-                StackDetailRespDTO stackDetailData = stackDetail.getData();
-                StackDetailDO record = new StackDetailDO();
-                record.setCurDate(curData);
-                record.setCode(stackDO.getCode());
-                record.setName(stackDO.getName());
-                record.setCurPrice(stackDetailData.getCurPrice());
-                record.setRise(stackDetailData.getRise());
-                record.setCurTotal(stackDetailData.getCurTotal());
-                record.setTotalPrice(stackDetailData.getTotalPrice());
-                stackDetailDOS.add(record);
+            if (codeSet.add(stackDO.getCode())) {
+                BooleanResult<StackDetailRespDTO> stackDetail = getStackDetail(stackDO.getCode());
+                if (stackDetail.isSucceed()) {
+                    StackDetailRespDTO stackDetailData = stackDetail.getData();
+                    StackDetailDO record = new StackDetailDO();
+                    record.setCurDate(curData);
+                    record.setCode(stackDO.getCode());
+                    record.setName(stackDO.getName());
+                    record.setCurPrice(stackDetailData.getCurPrice());
+                    record.setRise(stackDetailData.getRise());
+                    record.setCurTotal(stackDetailData.getCurTotal());
+                    record.setTotalPrice(stackDetailData.getTotalPrice());
+                    stackDetailDOS.add(record);
 
+                }
             }
-            if (CollectionUtils.isNotEmpty(stackDetailDOS)) {
-                stackDetailService.saveBatch(stackDetailDOS, 200);
-            }
+
+        }
+        if (CollectionUtils.isNotEmpty(stackDetailDOS)) {
+            stackDetailService.saveBatch(stackDetailDOS, 200);
         }
     }
 

@@ -19,6 +19,7 @@ import java.io.Serializable;
 @TableName("m_stack_detail")
 public class StackDetailDO implements Serializable {
 
+    private Long id;
     private static final long serialVersionUID = 1L;
 
     private String code;
